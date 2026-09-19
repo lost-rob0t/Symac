@@ -1,0 +1,294 @@
+#+title: Symac coding-agent architecture
+#+startup: overview
+
+* Thesis
+
+Coding agents are first-class workstation processes.
+
+Symac does not treat an external coding agent as a terminal command that happens
+to be visible in a buffer.  A coding agent has identity, capabilities, a
+project/worktree, task/slice ownership, an event stream, artifacts, tests,
+diffs, approvals, usage, and a resumable session.
+
+The generic protocol lives in the opinion-light platform.  Agent-specific
+integrations are optional packages.
+
+* Platform systems
+
+- =symac/coding-agent= -- generic coding-agent protocol and session model.
+- =symac/coding-agent-events= -- normalized event stream.
+- =symac/coding-agent-ui= -- editor-neutral presentation model consumed by
+  Lem/frontends.
+
+Optional adapters:
+
+- =symac-agent-opencode=
+- =symac-agent-codex=
+- =symac-agent-zcode=
+- =symac-agent-pi=
+- =symac-agent-agentprolog=
+
+The adapters must not redefine tasks, tools, sessions, Git state, or project
+state.  They map external harness behavior into Symac protocols.
+
+* Coding-agent protocol
+
+The protocol must support at least:
+
+#+begin_src lisp
+(defgeneric coding-agent-capabilities (backend))
+(defgeneric coding-agent-start (backend request))
+(defgeneric coding-agent-submit (session input))
+(defgeneric coding-agent-interrupt (session))
+(defgeneric coding-agent-resume (session))
+(defgeneric coding-agent-cancel (session))
+(defgeneric coding-agent-status (session))
+(defgeneric coding-agent-events (session &key since))
+(defgeneric coding-agent-artifacts (session))
+(defgeneric coding-agent-usage (session))
+#+end_src
+
+A backend capability record should describe support for concepts such as:
+
+- streaming;
+- tool calls;
+- subagents;
+- planning/read-only mode;
+- resumable sessions;
+- worktrees/branches;
+- structured events;
+- patches/diffs;
+- tests;
+- shell/process execution;
+- MCP;
+- A2A;
+- native task concepts;
+- remote execution;
+- model selection.
+
+Missing capabilities must be explicit.  Symac must not pretend every agent has
+the same control surface.
+
+* Normalized session
+
+A Symac coding-agent session owns or references:
+
+- stable Symac session ID;
+- backend and backend-native session ID;
+- project root;
+- worktree;
+- Git branch;
+- task ID;
+- zero or more slice IDs;
+- model/provider selection where exposed;
+- capability snapshot;
+- lifecycle state;
+- started/updated timestamps;
+- event cursor;
+- checkpoints/resume data;
+- files touched;
+- produced patches;
+- commands/tests executed;
+- verification state;
+- usage/cost metadata when available;
+- terminal/process handle when applicable.
+
+The external agent remains authoritative for its private internal state.
+Symac is authoritative for the workstation-visible normalized record.
+
+* Lifecycle
+
+Target lifecycle:
+
+#+begin_example
+created
+  -> starting
+  -> running
+  -> waiting
+  -> review
+  -> verified
+  -> completed
+
+running -> interrupted -> running
+running -> blocked
+running -> failed
+running -> canceled
+#+end_example
+
+State transitions are events and must be testable.
+
+* Worktree isolation
+
+The default coding-agent workflow uses an isolated Git worktree per active
+implementation slice when the repository supports Git.
+
+The task/slice record owns the desired branch/worktree relationship.  The
+adapter receives that environment.
+
+An adapter may not silently switch the user's main working tree to another
+branch.
+
+* Agent event model
+
+Normalize external output into events such as:
+
+#+begin_example
+agent.started
+agent.message.delta
+agent.message.completed
+agent.plan.updated
+agent.tool.started
+agent.tool.completed
+agent.command.started
+agent.command.completed
+agent.file.changed
+agent.patch.ready
+agent.test.started
+agent.test.completed
+agent.blocked
+agent.awaiting_approval
+agent.resumed
+agent.completed
+agent.failed
+#+end_example
+
+Backend-specific payloads may be retained as provenance, but UI code should
+mostly consume normalized events.
+
+* OpenCode adapter
+
+The OpenCode package should support running and attaching to OpenCode sessions
+through the most stable supported machine interface available to the installed
+version.
+
+Required Symac behavior:
+
+- choose project/worktree;
+- start or attach;
+- select exposed agent/mode/model;
+- stream normalized events;
+- interrupt/cancel;
+- show files and diffs;
+- bind the session to a Symac task/slice;
+- preserve backend-native session identifiers for resume.
+
+Do not bake OpenCode-specific concepts into =symac/coding-agent=.
+
+* Codex adapter
+
+The Codex package should prefer a structured programmatic/server interface when
+available and fall back to a subprocess adapter only behind the same protocol.
+
+Required Symac behavior:
+
+- start/attach to a project-scoped coding session;
+- submit work for a selected task/slice;
+- stream messages, commands, file changes, and verification state;
+- interrupt/resume/cancel when supported;
+- expose approvals through Symac's approval UI;
+- preserve native resume/session data;
+- never require the rest of Symac to know Codex transport details.
+
+* ZCode adapter
+
+ZCode is treated as an external agentic development environment.
+
+The adapter should integrate only through supported interfaces available to the
+installed ZCode version.  Symac's generic contract remains stable even if the
+external surface changes.
+
+Required behavior where supported:
+
+- task/session association;
+- workspace/project handoff;
+- model/execution-mode metadata;
+- status/event visibility;
+- file/diff/review handoff;
+- resume/open-in-ZCode command.
+
+No Symac core package may depend on ZCode.
+
+* Pi adapter
+
+Pi should be available as a coding-agent backend with the same normalized
+session and task integration.
+
+Where Pi exposes reusable agent/runtime APIs, prefer structured integration.
+Otherwise use a supervised subprocess adapter.
+
+Required behavior:
+
+- project/worktree scope;
+- task/slice attachment;
+- streaming;
+- tool/command events;
+- file/diff events;
+- cancellation;
+- resume if exposed;
+- model/runtime metadata.
+
+* AgentProlog adapter
+
+Canonical upstream product:
+
+=lost-rob0t/agentProlog=
+
+AgentProlog is a coding-agent product over =lost-rob0t/prolog-rlm=.  Symac
+should not duplicate Prolog-RLM semantics.
+
+The adapter should map AgentProlog coding sessions into =symac/coding-agent=
+while =symac-prolog-rlm= exposes the reusable symbolic runtime.
+
+Dependency direction:
+
+#+begin_example
+symac-agent-agentprolog
+  -> Symac coding-agent protocol
+  -> AgentProlog public surface
+  -> prolog-rlm
+
+symac-prolog-rlm
+  -> prolog-rlm
+#+end_example
+
+The two Symac packages may cooperate but serve different jobs:
+
+- =symac-prolog-rlm=: reusable symbolic/RLM runtime and IDE.
+- =symac-agent-agentprolog=: AgentProlog coding-agent product integration.
+
+* Multi-agent workstation UI
+
+The distribution should offer a coding-agent dashboard showing:
+
+- agent/backend;
+- project;
+- task;
+- current slice;
+- branch/worktree;
+- state;
+- elapsed time;
+- current operation;
+- tests;
+- changed files;
+- pending approvals;
+- token/cost/usage data where known.
+
+Selecting an agent should jump to its session, task, worktree, diff, trace, or
+terminal without requiring the user to hunt through unrelated buffers.
+
+* Tests
+
+Every adapter gets:
+
+- capability tests;
+- request normalization tests;
+- event normalization tests;
+- lifecycle tests;
+- cancellation tests;
+- crash/disconnect recovery tests;
+- task/slice association tests;
+- worktree isolation tests;
+- deterministic fake-backend contract tests.
+
+Live external-agent integration tests are separate from deterministic CI and
+must clearly report when the external executable/account is unavailable.
