@@ -21,6 +21,10 @@ Everything domain-specific belongs in separately loadable ASDF systems.
 | symac/prompt | prompt representation/rendering |
 | symac/tool | typed tools and effects |
 | symac/agent | agent runtime |
+| symac/coding-agent | normalized external coding-agent sessions/backends |
+| symac/task | first-class task model |
+| symac/slice | bounded executable task slices and verification |
+| symac/task-agent | task/slice to coding-agent coordination |
 | symac/chain | composable pipelines |
 | symac/graph | resumable state graphs |
 | symac/language | declarative AI/workflow language |
@@ -46,6 +50,14 @@ Everything domain-specific belongs in separately loadable ASDF systems.
 | symac-mcp | MCP client/server package |
 | symac-prolog | Prolog IDE/runtime integration |
 | symac-prolog-rlm | prolog-rlm bridge and RLM workstation UI |
+| symac-task-org | Org task backend |
+| symac-task-github | GitHub issue/task backend |
+| symac-task-rage | RAGE slice/task backend |
+| symac-agent-opencode | OpenCode coding-agent adapter |
+| symac-agent-codex | Codex coding-agent adapter |
+| symac-agent-zcode | ZCode coding-agent adapter |
+| symac-agent-pi | Pi coding-agent adapter |
+| symac-agent-agentprolog | AgentProlog coding-agent adapter |
 
 * Org family
 
@@ -61,6 +73,16 @@ Everything domain-specific belongs in separately loadable ASDF systems.
 - =symac-org-roam-ui=
 
 No package above may be required merely to open Symac.
+
+* Task and coding-agent integration
+
+The first-class task/slice model and generic coding-agent protocol are platform
+systems because they define workstation semantics used by multiple packages and
+frontends.  Org, GitHub, RAGE, OpenCode, Codex, ZCode, Pi, and AgentProlog are
+adapters over those neutral contracts.
+
+See [[file:tasks-slices.org][tasks-slices.org]] and
+[[file:coding-agents.org][coding-agents.org]].
 
 * Distribution
 
