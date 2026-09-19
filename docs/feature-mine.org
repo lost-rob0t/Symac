@@ -1,0 +1,543 @@
+#+title: Symac feature mine: lost-rob0t/dotfiles
+#+startup: overview
+
+* Purpose
+
+This document is the compatibility and inspiration inventory mined from the
+actual Emacs/Doom configuration in =lost-rob0t/dotfiles=.
+
+It is intentionally behavior-first.  Package names are evidence of desired
+capabilities, not requirements to clone Emacs implementations.
+
+* Literate configuration is a core UX requirement
+
+The source config is Org-first: canonical Org files generate executable config.
+Symac should preserve that style without requiring Emacs Lisp.
+
+Required behavior:
+
+- human-readable literate configuration is authoritative;
+- generated configuration is reproducible;
+- generated/configured state can be checked for drift;
+- package declarations and behavior config can be separated;
+- source ownership is explicit;
+- platform profiles may share code without pretending their constraints are
+  identical;
+- configuration reload should be safe and observable.
+
+Target Symac package:
+
+- =symac-literate-config=
+
+Distribution integration:
+
+- =symac-distribution=
+
+Tests:
+
+- deterministic compile/tangle;
+- source/generated parity;
+- changed source causes expected generated diff;
+- invalid config fails without partially mutating running state;
+- reload leaves previous good config active on failure.
+
+* Doom-style distribution UX
+
+The desktop config depends heavily on the benefits of an opinionated
+distribution even though Symac libraries themselves should stay neutral.
+
+Mined behaviors:
+
+- coherent module/package enablement;
+- leader-key discoverability;
+- quick navigation;
+- popups/temporary window policy;
+- modeline/status information;
+- workspaces;
+- project-aware commands;
+- helpful defaults without preventing replacement;
+- terminal and graphical operation;
+- theme switching;
+- consistent command naming.
+
+This belongs to the Symac distribution, not low-level editor core.
+
+* Common Lisp editing and live image development
+
+The config enables Common Lisp, Lispy, smart-parens style behavior, structural
+editing, eval overlays, debugger integration, lookup, completion, LSP, and
+project tooling.
+
+Symac must go deeper because Common Lisp is native.
+
+Required behaviors:
+
+- structural S-expression editing;
+- balanced editing operations;
+- form/definition navigation;
+- live evaluation;
+- eval-at-point/region/definition;
+- inline evaluation result rendering;
+- macro expansion;
+- compiler-note navigation;
+- conditions/restarts;
+- stack frames;
+- object inspector;
+- package browser;
+- class/generic-function/method browser;
+- XREF;
+- ASDF system browser;
+- test-at-point;
+- trace/profiling UI;
+- live redefinition;
+- image/session inspection.
+
+Target systems:
+
+- =symac-lisp=
+- =symac-lisp-structural=
+- =symac-lisp-debugger=
+- =symac-lisp-inspector=
+- =symac-lisp-test=
+
+* AI-native workstation
+
+The dotfiles contain a real gptel stack rather than a single prompt command.
+
+Mined behaviors include:
+
+- provider/model abstraction;
+- hosted and local backends;
+- OpenAI-style backends;
+- MCP integration;
+- personas/directives;
+- prompt library;
+- Org-native chat/session buffers;
+- selection/current-buffer/current-project context;
+- source-aware AI commands;
+- staged Git diff explanation;
+- tool construction;
+- model configuration independent of editor commands.
+
+Symac core should own these concepts directly.
+
+Target systems:
+
+- =symac-model=
+- =symac-provider=
+- =symac-message=
+- =symac-session=
+- =symac-context=
+- =symac-prompt=
+- =symac-tool=
+- =symac-agent=
+- =symac-chain=
+- =symac-graph=
+- =symac-language=
+
+* Prompt library
+
+The existing prompt library accepts multiple formats and normalizes them into a
+common record.
+
+Observed formats:
+
+- Org;
+- Markdown;
+- declarative Lisp;
+- legacy raw prompt files.
+
+Observed metadata concepts:
+
+- id;
+- title;
+- description;
+- tags;
+- aliases;
+- body;
+- source path;
+- format.
+
+Symac should make this a native library with parser and validation protocols.
+
+Target system:
+
+- =symac-prompt-library=
+
+Acceptance requirements:
+
+- no evaluation required to read declarative prompt data;
+- format parsers normalize into one typed prompt object;
+- malformed metadata produces a useful condition;
+- duplicate IDs are detected;
+- aliases are indexed;
+- prompt records are reloadable without restarting Symac.
+
+* Org-native AI sessions
+
+The existing setup uses Org-mode as an AI conversation surface.
+
+Symac should support a first-class structured conversation document with Org as
+one package-backed representation.
+
+Required behaviors:
+
+- session buffer/document;
+- persisted messages;
+- per-session backend/model;
+- editable history;
+- tool/result blocks;
+- reasoning/trace links;
+- attachments/context references;
+- resume from disk;
+- export/import.
+
+Target systems:
+
+- core =symac-session=
+- package =symac-org-ai=
+
+* Org
+
+The config relies on Org as workflow infrastructure, not just Markdown-like
+editing.
+
+Mined capabilities:
+
+- headings;
+- TODO states;
+- priorities;
+- tags;
+- properties/drawers;
+- scheduling/deadlines;
+- recurring timestamps;
+- agenda;
+- capture;
+- Babel/source execution;
+- links;
+- tables;
+- alerts;
+- modern presentation;
+- document/media insertion;
+- HTTP notebooks;
+- Prolog blocks;
+- project checklists;
+- flashcards;
+- presentations.
+
+Target packages:
+
+- =symac-org=
+- =symac-org-agenda=
+- =symac-org-babel=
+- =symac-org-alert=
+- =symac-org-present=
+
+The parser must be AST-based and compatible with real existing Org files.
+
+* Org-roam
+
+The desktop and Android configurations both treat Org-roam as important.
+
+Required behaviors:
+
+- node IDs;
+- backlinks;
+- forward links;
+- aliases;
+- references;
+- tags;
+- capture;
+- daily notes;
+- graph traversal;
+- graph visualization;
+- incremental index;
+- rebuild;
+- broken-link detection;
+- orphan detection;
+- mobile-friendly browsing.
+
+Target packages:
+
+- =symac-org-roam=
+- =symac-org-roam-ui=
+
+Storage must use a protocol.  SQLite may be a backend, not the semantic API.
+
+* Org-QL style querying
+
+The config installs and uses =org-ql=.
+
+Symac should expose a native query API over Org AST/index state.
+
+Required:
+
+- Lisp query form;
+- text/search-oriented query syntax;
+- composable predicates;
+- agenda/result views;
+- query explain/inspection;
+- indexed execution where possible.
+
+Target package:
+
+- =symac-org-query=
+
+* Git and Forge workflow
+
+The config uses Magit, Forge, Magit Todos, staged-diff AI explanation, and
+research approval commands.
+
+Required behaviors:
+
+- status;
+- stage/unstage;
+- commit;
+- branch;
+- rebase;
+- log;
+- diff;
+- blame;
+- stash;
+- remote;
+- GitHub/Forge-style issue and PR access through provider packages;
+- TODO extraction;
+- AI explanation/review of diffs;
+- project-to-runtime navigation.
+
+Target packages:
+
+- =symac-git=
+- =symac-forge=
+- =symac-git-todos=
+- =symac-ai-git=
+
+The UI should be inspired by Magit's interaction quality, not tied to Emacs.
+
+* Fail-closed approval workflow
+
+The dotfiles contain a research approval flow with unusually strong invariants.
+
+Mined behavior:
+
+- canonical approval fields;
+- reject dirty repositories;
+- reject detached HEAD;
+- reject ambiguous upstream;
+- verify exact base commit/blob;
+- dry-run push before mutation;
+- show narrow diff;
+- explicit human confirmation;
+- file-only commit;
+- never guess/create branch;
+- failed push leaves recoverable verified local state.
+
+This is valuable as a generic workflow/approval package.
+
+Target packages:
+
+- =symac-approval=
+- =symac-git-approval=
+
+Tests must include every fail-closed branch.
+
+* Durable agenda synchronization
+
+The config asynchronously syncs saved Org agenda files while protecting editor
+responsiveness and concurrent state.
+
+Mined behavior:
+
+- save hook dispatches asynchronous sync;
+- exact saved contents are snapshotted;
+- shared lock protects concurrent local/timer sync;
+- remote fast-forward and local restore are explicit;
+- conflicting edits fail closed;
+- recovery copy retained;
+- periodic timer and editor save share synchronization primitive.
+
+Target package:
+
+- =symac-org-sync=
+
+This package should use a generic sync protocol so Git is one backend.
+
+* Project environments
+
+The config uses direnv/envrc and shell path integration.
+
+Required behaviors:
+
+- per-project environment;
+- buffer/process inheritance;
+- explicit environment refresh;
+- inspect environment differences;
+- safe failure when project environment cannot load.
+
+Target package:
+
+- =symac-env=
+
+* Terminal and process integration
+
+The config relies on vterm/eshell-style workflows.
+
+Required behaviors:
+
+- terminal buffer;
+- process buffer;
+- shell command execution;
+- project-root command execution;
+- asynchronous output;
+- cancellation;
+- process lifecycle inspection;
+- terminal-safe frontend;
+- Android/Termux backend.
+
+Target packages:
+
+- =symac-process=
+- =symac-terminal=
+
+* Workspace/layout persistence
+
+Doom workspaces and Burly indicate that layout persistence matters.
+
+Required behaviors:
+
+- named workspaces;
+- per-workspace buffers/windows;
+- save/restore layout;
+- missing buffers restored lazily where possible;
+- project-bound workspace;
+- serializable layout format.
+
+Target package:
+
+- =symac-workspaces=
+
+* Completion/search
+
+The desktop config uses Ivy while the phone profile uses Vertico.
+
+The real requirement is therefore not "clone Ivy".
+
+Symac should define completion/narrowing protocols and permit multiple UIs.
+
+Required:
+
+- completion sources;
+- fuzzy/exact filtering;
+- metadata/annotations;
+- async sources;
+- command history;
+- file/project/symbol/buffer sources;
+- pluggable frontend.
+
+Target systems:
+
+- =symac-completion=
+- distribution-provided default completion UI.
+
+* Snippets and templates
+
+The config uses snippets heavily, including AI/tool authoring snippets.
+
+Target package:
+
+- =symac-snippets=
+
+Required:
+
+- mode/package-scoped snippets;
+- placeholders;
+- evaluated/derived fields only through explicit safe APIs;
+- project and user snippet directories;
+- interactive insertion;
+- testable expansion.
+
+* Prolog
+
+The config includes Prolog editing/Babel support and the broader system depends
+on Prolog-RLM.
+
+Target packages:
+
+- =symac-prolog=
+- =symac-prolog-rlm=
+
+Required:
+
+- source mode;
+- REPL/query buffer;
+- predicate navigation;
+- module browser;
+- diagnostics;
+- Org/Babel execution;
+- CL<->Prolog term bridge;
+- RLM traces;
+- graph/agent invocation;
+- symbolic tool registration.
+
+Reuse the existing =lost-rob0t/prolog-rlm/lisp/prolog-rlm-cl.asd= bridge where
+appropriate.
+
+* Android/Termux
+
+The real config deliberately separates three environments:
+
+- full desktop development;
+- Termux development profile;
+- lightweight native Android reader/client.
+
+Symac should preserve this principle.
+
+Required architecture:
+
+- shared runtime protocols;
+- frontend abstraction;
+- terminal frontend;
+- desktop frontend;
+- Android frontend;
+- Termux/native process integration;
+- low-resource/mobile profile;
+- full mobile development profile.
+
+Feature parity tests must never assume desktop GUI availability.
+
+* Distribution feature set mined from the config
+
+The default Symac distribution should eventually include curated packages for:
+
+- Common Lisp;
+- structural editing;
+- completion/search;
+- snippets;
+- projects;
+- environments;
+- Git/Forge;
+- terminal/processes;
+- Org;
+- Org-roam;
+- Org queries;
+- AI sessions;
+- prompt library;
+- MCP;
+- Prolog;
+- Prolog-RLM;
+- workspaces;
+- theme/profile management;
+- Android/Termux support.
+
+StarIntel and Quasar remain optional package families, not prerequisites for a
+general Symac installation.
+
+* What is explicitly not the goal
+
+- transliterating Emacs Lisp into Common Lisp line-for-line;
+- making Symac core depend on StarIntel;
+- making Org mandatory for users who do not want it;
+- making one completion UI mandatory;
+- tying models to one provider;
+- tying graph execution to a Python runtime;
+- hiding package behavior behind untestable global startup magic.
