@@ -1,0 +1,345 @@
+#+title: Symac first-class tasks and slice management
+#+startup: overview
+
+* Thesis
+
+Tasks are workstation objects.
+
+Org headings, GitHub issues, RAGE records, coding-agent tasks, and plain local
+tasks are representations or backends.  None of them define the core task
+semantics.
+
+The core model must work without Org, GitHub, or a coding agent installed.
+
+* Platform systems
+
+- =symac/task= -- task identity, state, scheduling, dependencies, events.
+- =symac/slice= -- bounded implementation slices and verification.
+- =symac/task-store= -- storage protocol.
+- =symac/task-ui= -- editor-neutral task/slice views.
+- =symac/task-agent= -- task/slice <-> coding-agent integration.
+
+Optional adapters:
+
+- =symac-task-org=
+- =symac-task-github=
+- =symac-task-rage=
+- =symac-task-git=
+- =symac-task-starintel=
+
+* Task object
+
+A task should support:
+
+- stable ID;
+- title;
+- body/notes;
+- state;
+- priority;
+- project;
+- created/updated timestamps;
+- SCHEDULED placement;
+- optional DEADLINE as a real final cutoff;
+- dependencies;
+- blocked reason;
+- parent/children;
+- references/links;
+- source backend;
+- source-native ID;
+- assigned human/agent;
+- labels/tags without confusing them with workflow states;
+- slices;
+- event history;
+- definition of done;
+- verification summary.
+
+Workflow states are configurable.
+
+The default distribution should include:
+
+#+begin_example
+TODO
+NEXT
+ACTIVE
+BLOCKED
+REVIEW
+DONE
+IDEA
+CANCELED
+#+end_example
+
+=IDEA= is a workflow state, not a tag.
+
+Time placement should use =SCHEDULED=.  =DEADLINE= is reserved for an actual
+final cutoff rather than ordinary queue placement.
+
+* Slice object
+
+A slice is a bounded executable unit of a task.
+
+A slice should carry:
+
+- stable ID;
+- parent task ID;
+- concise objective;
+- scope;
+- explicit non-goals;
+- files/systems likely involved;
+- dependencies;
+- acceptance tests;
+- commands/checks;
+- expected artifacts;
+- risk notes;
+- estimated concurrency conflicts;
+- assigned agent/session;
+- branch;
+- worktree;
+- status;
+- verification evidence;
+- review result.
+
+Slices may form a DAG.
+
+A task can therefore remain high-level while multiple slices progress
+independently.
+
+* Slice states
+
+Default:
+
+#+begin_example
+QUEUED
+READY
+RUNNING
+BLOCKED
+REVIEW
+VERIFIED
+DONE
+FAILED
+CANCELED
+#+end_example
+
+A slice cannot enter =VERIFIED= merely because an agent says it is complete.
+Verification evidence must satisfy the slice's configured checks.
+
+* Task events
+
+Task/slice mutation should be event-oriented.
+
+Examples:
+
+#+begin_example
+task.created
+task.state_changed
+task.scheduled
+task.deadline_changed
+task.blocked
+task.unblocked
+slice.created
+slice.assigned
+slice.started
+slice.blocked
+slice.review_requested
+slice.verified
+slice.completed
+agent.attached
+agent.detached
+verification.recorded
+#+end_example
+
+This gives the UI, Org adapter, GitHub adapter, and coding-agent layer one
+observable model.
+
+* First-class key-driven workflow
+
+The Symac distribution should reserve a coherent task leader.
+
+Default Doom-inspired bindings:
+
+| Key | Action |
+|-----+--------|
+| =SPC t t= | open task dashboard |
+| =SPC t n= | capture new task |
+| =SPC t i= | capture IDEA |
+| =SPC t s= | open slice board for task/project |
+| =SPC t a= | assign task/slice to coding agent |
+| =SPC t r= | run/resume selected slice |
+| =SPC t x= | interrupt/cancel active slice agent |
+| =SPC t b= | mark blocked / edit blocker |
+| =SPC t v= | run verification |
+| =SPC t d= | mark done when completion rules permit |
+| =SPC t e= | edit task |
+| =SPC t p= | change priority/state |
+| =SPC t S= | schedule task |
+| =SPC t l= | open task event log |
+| =SPC t g= | sync configured task backends |
+| =SPC t RET= | jump to task/slice context |
+
+Bindings belong to the distribution keymap and remain user-rebindable.
+
+Packages must expose commands independently of these defaults.
+
+* Context-sensitive task commands
+
+Task commands should understand point/current UI context.
+
+Examples:
+
+- from source: show tasks referencing this file/symbol;
+- from Git diff: open slice producing the change;
+- from test failure: attach failure to current slice;
+- from agent session: open assigned task/slice;
+- from Org heading: resolve backing Symac task;
+- from GitHub issue: resolve imported task;
+- from task board: jump to code/worktree/session.
+
+The workstation should make these relationships bidirectional.
+
+* Slice management UI
+
+Provide a dedicated project slice board.
+
+Minimum columns:
+
+#+begin_example
+READY | RUNNING | BLOCKED | REVIEW | VERIFIED | DONE
+#+end_example
+
+Each row/card should be usable from the keyboard and show compactly:
+
+- slice ID/title;
+- parent task;
+- assigned backend/agent;
+- branch/worktree;
+- current state;
+- blocker if any;
+- test/verification state;
+- changed-file count;
+- age/runtime;
+- pending approval indicator.
+
+Required keyboard operations:
+
+- filter;
+- narrow;
+- reorder where meaningful;
+- assign/reassign;
+- start;
+- interrupt;
+- resume;
+- block/unblock;
+- split slice;
+- merge/reparent slice;
+- open agent session;
+- open worktree;
+- open diff;
+- run verification;
+- request review;
+- complete;
+- inspect event history.
+
+No mouse-only workflow.
+
+* Task dashboard
+
+The task dashboard should support views:
+
+- today;
+- scheduled;
+- NEXT;
+- active;
+- blocked;
+- review;
+- ideas;
+- project;
+- agent-owned;
+- unassigned;
+- stale;
+- recently completed.
+
+Views are queries over the task model, not hard-coded separate databases.
+
+* Coding-agent integration
+
+A slice is the default unit assigned to a coding agent.
+
+Assignment should atomically establish, where requested:
+
+- task/slice ownership;
+- coding-agent backend;
+- project root;
+- branch;
+- worktree;
+- session link;
+- verification contract.
+
+The agent receives the bounded slice rather than an entire unstructured project
+unless the user explicitly chooses otherwise.
+
+Agent output must update normalized session/events.  It must not directly mark
+a slice =VERIFIED= without the configured verification path succeeding.
+
+* Org adapter
+
+=symac-task-org= maps tasks to Org while preserving Symac semantics.
+
+Requirements:
+
+- TODO workflow states map to Org TODO keywords;
+- IDEA maps to =IDEA= heading state, not an Org tag;
+- scheduling maps to =SCHEDULED=;
+- real cutoffs map to =DEADLINE=;
+- task IDs persist through round trips;
+- unknown Org metadata is preserved;
+- sync conflicts fail closed.
+
+Org remains a great human-editable backend, but it is not required for the core
+task runtime.
+
+* GitHub/RAGE adapters
+
+GitHub issues and RAGE records should be importable/linkable as task sources.
+
+Adapters must preserve:
+
+- source URL/native ID;
+- state mapping;
+- labels;
+- comments/evidence where configured;
+- sync cursor/version;
+- conflict state.
+
+Do not silently overwrite remote human edits.
+
+* Persistence
+
+Start with a simple durable local store behind =symac/task-store=.
+
+The protocol must support transactions or equivalent atomic updates for:
+
+- task + slice creation;
+- slice + agent assignment;
+- state transition + event append;
+- verification + state transition.
+
+Org/SQLite/Git-backed stores can then be implemented without rewriting the UI.
+
+* TDD acceptance suite
+
+Tests first:
+
+1. create/edit/delete/archive local task;
+2. IDEA is a state, not a tag;
+3. schedule does not create a deadline;
+4. task dependencies prevent invalid readiness;
+5. slice DAG rejects cycles;
+6. slice cannot verify without required evidence;
+7. agent assignment creates consistent task/slice/session linkage;
+8. canceling an agent does not silently complete a slice;
+9. blocking records a reason/event;
+10. key commands dispatch against current task/slice context;
+11. board query deterministically produces columns;
+12. Org round-trip preserves IDs/states/scheduling;
+13. remote conflict fails closed;
+14. interrupted process leaves resumable task state;
+15. backend unavailable does not corrupt local task data.
