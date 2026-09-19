@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  common-lisp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SBCL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sbcl
+
+      - name: Load and test Symac
+        run: |
+          sbcl --noinform --non-interactive \
+            --eval '(require :asdf)' \
+            --eval "(asdf:load-asd #p\"$PWD/symac.asd\")" \
+            --eval '(asdf:test-system "symac")'
