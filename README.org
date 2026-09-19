@@ -36,6 +36,8 @@ Core examples:
 - agents;
 - chains;
 - resumable graphs;
+- first-class tasks and executable slices;
+- normalized coding-agent sessions;
 - package loading;
 - capability/effect model.
 
@@ -51,7 +53,8 @@ Package examples:
 - StarIntel;
 - Quasar;
 - observability;
-- Android frontend/runtime integration.
+- Android frontend/runtime integration;
+- OpenCode, Codex, ZCode, Pi, and AgentProlog coding-agent adapters.
 
 * Source configuration used for feature mining
 
@@ -76,3 +79,17 @@ integration, UI, restart/recovery, and platform tests.
 
 Every optional package must be loadable and testable independently of the full
 distribution.
+
+* Task and coding-agent workstation
+
+Tasks and implementation slices are first-class Symac objects.  The default
+distribution exposes a keyboard-first task dashboard and slice board, and can
+assign bounded slices to coding agents while retaining worktree, diff, test,
+review, and verification context.
+
+Coding-agent support is backend-neutral.  OpenCode, Codex, ZCode, Pi, and
+AgentProlog integrate through =symac/coding-agent= rather than defining separate
+editor workflows.
+
+See [[file:docs/tasks-slices.org][docs/tasks-slices.org]] and
+[[file:docs/coding-agents.org][docs/coding-agents.org]].
