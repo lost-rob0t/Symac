@@ -1,0 +1,88 @@
+#+title: Symac package map
+#+startup: overview
+
+* Rule
+
+Editor and LLM-workstation primitives belong in the Symac platform.
+Everything domain-specific belongs in separately loadable ASDF systems.
+
+* Platform
+
+| System | Responsibility |
+|--------+----------------|
+| symac/core | lifecycle, conditions, events, capability/effect primitives |
+| symac/editor | Lem integration and editor protocol |
+| symac/lisp | Common Lisp live-development primitives |
+| symac/model | model identity/capabilities |
+| symac/provider | provider protocol |
+| symac/message | typed messages/content parts |
+| symac/session | persistent conversations |
+| symac/context | context references, packing, selection |
+| symac/prompt | prompt representation/rendering |
+| symac/tool | typed tools and effects |
+| symac/agent | agent runtime |
+| symac/chain | composable pipelines |
+| symac/graph | resumable state graphs |
+| symac/language | declarative AI/workflow language |
+| symac/package | extension/package contribution protocol |
+| symac/workstation | integration facade |
+
+* General packages
+
+| Package | Source behavior mined from dotfiles |
+|---------+-------------------------------------|
+| symac-completion | Ivy/Vertico-style narrowing requirement |
+| symac-snippets | Doom snippets/Yasnippet workflows |
+| symac-project | project navigation and project-aware commands |
+| symac-env | direnv/envrc behavior |
+| symac-process | async shell/process execution |
+| symac-terminal | vterm/eshell role |
+| symac-git | Magit-class Git interaction |
+| symac-forge | Forge provider integration |
+| symac-git-todos | Magit TODO extraction |
+| symac-workspaces | Doom workspace + Burly layout persistence |
+| symac-literate-config | Org-first config ownership and generated parity |
+| symac-prompt-library | Org/Markdown/Lisp/raw prompt library |
+| symac-mcp | MCP client/server package |
+| symac-prolog | Prolog IDE/runtime integration |
+| symac-prolog-rlm | prolog-rlm bridge and RLM workstation UI |
+
+* Org family
+
+- =symac-org=
+- =symac-org-agenda=
+- =symac-org-babel=
+- =symac-org-query=
+- =symac-org-alert=
+- =symac-org-sync=
+- =symac-org-ai=
+- =symac-org-present=
+- =symac-org-roam=
+- =symac-org-roam-ui=
+
+No package above may be required merely to open Symac.
+
+* Distribution
+
+=symac-distribution= selects and configures a coherent default set.
+
+It may provide strong defaults.  Those defaults are not part of the low-level
+library contracts.
+
+The distribution is allowed to feel opinionated and integrated.  The packages
+must remain reusable independently.
+
+* StarIntel family
+
+Optional:
+
+- =symac-starintel=
+- =symac-starintel-actors=
+- =symac-starintel-targets=
+- =symac-starintel-datasets=
+- =symac-starintel-graph=
+- =symac-starintel-observability=
+- =symac-quasar=
+
+These packages consume Symac protocols.  They do not define the generic editor,
+LLM, graph, or package APIs.
