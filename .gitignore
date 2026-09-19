@@ -1,0 +1,17 @@
+*.fasl
+*.dx64fsl
+*.lx64fsl
+*.xfasl
+*.ofasl
+*.ufsl
+*.dfsl
+*.pfsl
+*.d64fsl
+*.fsl
+.qlot/
+.quicklisp/
+.cache/
+result/
+.direnv/
+.env
+.DS_Store
