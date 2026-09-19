@@ -1,0 +1,113 @@
+#+title: Symac TDD contract
+#+startup: overview
+
+* Rule
+
+Production behavior follows tests.
+
+Every feature mined from the user's Emacs configuration must be expressed as a
+behavioral contract before being marked ported.
+
+* Test classes
+
+** Unit
+
+Pure parsers, reducers, schemas, graph transitions, package metadata, prompt
+normalization, Org AST operations, Prolog term conversion.
+
+** Contract
+
+Provider, model, tool, package, storage, frontend, completion, sync, Git, Org
+index, graph checkpoint, and process protocols.
+
+** Integration
+
+Cross-package behavior:
+
+- editor -> Lisp image;
+- editor -> model;
+- model -> tool;
+- agent -> graph;
+- graph -> checkpoint -> resume;
+- Org -> index -> query;
+- Org-roam -> graph;
+- project -> environment -> process;
+- Git -> approval workflow;
+- Prolog -> RLM -> Symac graph/session.
+
+** UI
+
+Command invocation, buffer/window state, completion, diff acceptance/rejection,
+debugger/restart interaction, workspace restore, Org navigation.
+
+** Recovery
+
+- provider disconnect;
+- model timeout;
+- tool timeout;
+- interrupted graph;
+- corrupt checkpoint;
+- invalid package config;
+- failed config reload;
+- Git conflict;
+- agenda sync conflict;
+- Prolog process crash;
+- Android activity/process restart.
+
+** Platform
+
+Desktop GUI, terminal, headless test runtime, Android/Termux-supported path.
+
+* Feature-parity rule
+
+Do not test "package exists".
+
+Test the behavior that motivated it.
+
+Example:
+
+Bad:
+
+#+begin_src lisp
+(is (find-package :symac-workspaces))
+#+end_src
+
+Good:
+
+#+begin_src lisp
+(with-test-workstation (ws)
+  (open-buffer ws "a.lisp")
+  (split-window ws)
+  (save-workspace ws "research")
+  (close-all-windows ws)
+  (restore-workspace ws "research")
+  (is (equal (workspace-layout ws)
+             '(:split :vertical (:buffer "a.lisp") (:buffer "a.lisp")))))
+#+end_src
+
+* Fail-closed workflows
+
+The following require explicit negative-path suites:
+
+- configuration reload;
+- Git approval;
+- durable Org sync;
+- capability-gated tools;
+- graph effects;
+- Prolog/RLM execution;
+- package activation;
+- filesystem mutation;
+- Android/native process bridge.
+
+* CI gate
+
+No subsystem is "done" until:
+
+1. its test system loads in a clean image;
+2. tests run from a clean checkout;
+3. no test depends on developer-local config;
+4. deterministic tests require no external credentials;
+5. live-provider tests are separated and clearly labeled;
+6. timeouts prevent hung test suites;
+7. integration tests exercise package boundaries;
+8. failures emit enough trace state to reproduce locally.
