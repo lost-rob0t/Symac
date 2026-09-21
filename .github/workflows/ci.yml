@@ -35,3 +35,9 @@ jobs:
             render guix examples/distro/workstation.pl workstation > /tmp/symac.scm
           grep -q 'environment.systemPackages' /tmp/symac.nix
           grep -q '%symac-packages' /tmp/symac.scm
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Check Symac flake
+        run: nix flake check --no-write-lock-file
