@@ -37,10 +37,10 @@ dispatch([agent, Path, Host, Verb, Arg, Output]) :-
     !,
     agent_action(Verb, Arg, Action),
     run_agent(Path, Host, Action, Output).
-dispatch([agent, Path, Host, set-variable, Key, Value, Output]) :-
+dispatch([agent, Path, Host, 'set-variable', Key, Value, Output]) :-
     !,
     run_agent(Path, Host, set_session_variable(Key, Value), Output).
-dispatch([agent, Path, Host, secret-env, Name, EnvName, Output]) :-
+dispatch([agent, Path, Host, 'secret-env', Name, EnvName, Output]) :-
     !,
     run_agent(Path, Host,
               set_secret_source(Name, environment(EnvName)), Output).
@@ -63,12 +63,12 @@ run_agent(Path, Host, Action, Output) :-
     write_fact_file(Output, Facts),
     format("action=~q output=~w~n", [Action, Output]).
 
-agent_action(ensure-package, Package, ensure_package(Package)).
-agent_action(remove-package, Package, remove_package(Package)).
-agent_action(enable-feature, Feature, set_feature(Feature, enabled)).
-agent_action(disable-feature, Feature, set_feature(Feature, disabled)).
-agent_action(enable-service, Service, set_service(Service, enabled)).
-agent_action(disable-service, Service, set_service(Service, disabled)).
+agent_action('ensure-package', Package, ensure_package(Package)).
+agent_action('remove-package', Package, remove_package(Package)).
+agent_action('enable-feature', Feature, set_feature(Feature, enabled)).
+agent_action('disable-feature', Feature, set_feature(Feature, disabled)).
+agent_action('enable-service', Service, set_service(Service, enabled)).
+agent_action('disable-service', Service, set_service(Service, disabled)).
 agent_action(backend, Backend, set_backend(Backend)).
 agent_action(prefer, Preference, prefer(Preference)).
 agent_action(require, Capability, require(Capability)).
