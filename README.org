@@ -1,0 +1,113 @@
+#+title: Symac
+#+startup: overview
+
+* Symac
+
+Symac is an AI-native Common Lisp workstation built on Lem.
+
+It is not an editor with an LLM sidebar.  The editor, live Common Lisp image,
+models, tools, agents, graphs, symbolic reasoning, sessions, and package system
+are one programmable environment.
+
+The project has two layers:
+
+- *Symac platform*: opinion-light Common Lisp libraries and protocols.
+- *Symac distribution*: a batteries-included, highly integrated workstation
+  inspired by the "distribution" idea that makes Doom Emacs useful, but aimed
+  at Common Lisp, AI-native development, Prolog/RLM work, and StarIntel.
+
+The real feature baseline is mined from =lost-rob0t/dotfiles=.  Symac does not
+guess what an "Emacs replacement" should contain; it ports the workflows and
+capabilities that are actually used, then exposes them as neutral packages.
+
+* Core rule
+
+Keep editor and LLM-workstation primitives in core.  Everything else is an
+installable ASDF package.
+
+Core examples:
+
+- editor/runtime lifecycle;
+- buffers, windows, commands, keymaps;
+- live Common Lisp development;
+- model/provider protocols;
+- messages, sessions, contexts, prompts;
+- typed tools;
+- agents;
+- chains;
+- resumable graphs;
+- first-class tasks and executable slices;
+- normalized coding-agent sessions;
+- package loading;
+- capability/effect model.
+
+Package examples:
+
+- Org;
+- Org-roam;
+- Prolog;
+- Prolog-RLM;
+- Git/Forge;
+- terminal;
+- project/environment integration;
+- StarIntel;
+- Quasar;
+- observability;
+- Android frontend/runtime integration;
+- OpenCode, Codex, ZCode, Pi, and AgentProlog coding-agent adapters.
+
+* Source configuration used for feature mining
+
+Canonical feature source:
+
+- =lost-rob0t/dotfiles/.doom.d/config.org=
+- =lost-rob0t/dotfiles/.doom.d/packages.org=
+- =lost-rob0t/dotfiles/lisp/=
+- =lost-rob0t/dotfiles/docs/wiki/emacs.org=
+- =lost-rob0t/dotfiles/android/=
+- =lost-rob0t/dotfiles/android/doom/config.org=
+
+See [[file:docs/feature-mine.org][docs/feature-mine.org]].
+
+* Engineering policy
+
+Symac is developed TDD-first.
+
+A feature is not considered ported because a similarly named package exists.
+Its behavior must have a testable contract and must pass the relevant unit,
+integration, UI, restart/recovery, and platform tests.
+
+Every optional package must be loadable and testable independently of the full
+distribution.
+
+* Task and coding-agent workstation
+
+Tasks and implementation slices are first-class Symac objects.  The default
+distribution exposes a keyboard-first task dashboard and slice board, and can
+assign bounded slices to coding agents while retaining worktree, diff, test,
+review, and verification context.
+
+Coding-agent support is backend-neutral.  OpenCode, Codex, ZCode, Pi, and
+AgentProlog integrate through =symac/coding-agent= rather than defining separate
+editor workflows.
+
+See [[file:docs/tasks-slices.org][docs/tasks-slices.org]] and
+[[file:docs/coding-agents.org][docs/coding-agents.org]].
+
+
+* Agentic Nix / Guix distribution
+
+Symac has a deterministic Prolog distribution compiler.  Agents write
+backend-neutral facts; experts validate and derive a portable desired-state IR;
+renderers emit NixOS or Guix definitions without requiring an LLM.
+
+The compiler fails closed on unknown facts, conflicting state, unmapped packages,
+and secret values.  Secret metadata may reference only environment variables,
+wallet entries, or Emacs auth-source identifiers.
+
+#+begin_src sh
+nix run .#symac-distro -- render nix examples/distro/workstation.pl workstation
+nix run .#symac-distro -- render guix examples/distro/workstation.pl workstation
+#+end_src
+
+See [[file:docs/distro.org][docs/distro.org]].

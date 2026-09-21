@@ -1,0 +1,122 @@
+#+title: Symac Agentic Distribution Compiler
+#+startup: overview
+
+* Contract
+
+Symac treats Nix and Guix as deterministic deployment backends, not as the
+source of intelligence.  The canonical desired state is a set of data-only
+Prolog facts.  Prolog experts derive a portable distribution IR and backend
+renderers emit Nix or Guix code without an LLM.
+
+The first executable slice lives under =prolog/distro/=.
+
+#+begin_example
+facts -> schema gate -> Prolog experts -> distro IR -> Nix renderer
+                                           \-> Guix renderer
+#+end_example
+
+Configuration files are deliberately *not* consulted as arbitrary Prolog code.
+They may contain only the facts accepted by =schema.pl=. Rules, directives,
+variables, unknown predicates, conflicting values, and unknown backend package
+mappings fail closed.
+
+* Facts
+
+A minimal host:
+
+#+begin_src prolog
+host(workstation).
+backend(workstation, auto).
+role(workstation, developer).
+role_package(developer, git).
+feature(workstation, prolog, enabled).
+feature(workstation, common_lisp, enabled).
+service(workstation, openssh, enabled).
+session_variable(workstation, "STAR_PROFILE", "developer").
+#+end_src
+
+Backend-specific package names are an escape hatch expressed as facts rather
+than renderer code:
+
+#+begin_src prolog
+backend_package(nix, my_tool, "myTool").
+backend_package(guix, my_tool, "my-tool").
+package(workstation, my_tool).
+#+end_src
+
+* Deterministic backend selection
+
+=backend(Host, nix)= and =backend(Host, guix)= are explicit.
+
+=backend(Host, auto)= currently applies these inspectable rules:
+
+1. =requires(Host, proprietary_nvidia)= or =requires(Host, nix_flake)= -> Nix;
+2. =prefers(Host, fully_free_system)= -> Guix;
+3. otherwise -> Nix.
+
+The CLI =render nix= or =render guix= overrides the selected backend for a
+single compilation without modifying the fact file.
+
+* Secrets
+
+Secret *values* are outside the fact graph.  Sensitive environment-variable
+names used with =session_variable/3= are rejected.
+
+Facts may record only a source:
+
+#+begin_src prolog
+secret_source(workstation, "OPENROUTER_API_KEY",
+              environment("OPENROUTER_API_KEY")).
+secret_source(workstation, "OTHER_SECRET",
+              wallet("symac/other-secret")).
+secret_source(workstation, "THIRD_SECRET",
+              auth_source("machine.example")).
+#+end_src
+
+Renderers emit source metadata only.  They never copy a secret value into Nix,
+Guix, the Nix store, generated configuration, or Git.
+
+* CLI
+
+With SWI-Prolog installed:
+
+#+begin_src sh
+./scripts/symac-distro check examples/distro/workstation.pl
+./scripts/symac-distro plan examples/distro/workstation.pl workstation
+./scripts/symac-distro render nix examples/distro/workstation.pl workstation
+./scripts/symac-distro render guix examples/distro/workstation.pl workstation
+#+end_src
+
+Nix packages the compiler itself:
+
+#+begin_src sh
+nix run .#symac-distro -- render nix examples/distro/workstation.pl workstation
+nix flake check
+#+end_src
+
+The Nix renderer emits a NixOS module fragment using =environment.systemPackages=,
+=sessionVariables=, and mapped system services.
+
+The Guix renderer emits valid Guile definitions for =%symac-packages=,
+=%symac-system-services=, and =%symac-environment=.  A later system-image slice
+will compose those definitions with machine-specific bootloader/filesystem facts;
+the semantic package/service facts do not change.
+
+* Agent model
+
+Agents should write the canonical facts rather than free-form Nix or Scheme.
+
+The intended execution loop is:
+
+1. inspect host/project state;
+2. assert or retract bounded facts;
+3. validate the fact graph;
+4. derive IR;
+5. render one or both backends;
+6. invoke the real backend checker/build;
+7. normalize diagnostics into facts;
+8. apply deterministic repair experts;
+9. repeat until the bounded plan succeeds or a rule has no safe repair.
+
+LLMs may propose facts later, but no LLM is required for compilation, backend
+selection, rendering, validation, or deterministic repair.
