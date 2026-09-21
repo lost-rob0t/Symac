@@ -3,6 +3,9 @@
 :- use_module(schema).
 :- use_module(compiler).
 :- use_module(render).
+:- use_module(agent).
+:- use_module(diagnostics).
+:- use_module(repair).
 
 base_facts([
     host(workstation),
@@ -96,5 +99,54 @@ test(unknown_backend_package_fails_closed,
     base_facts(Facts0),
     Facts = [package(workstation, unknown_pkg)|Facts0],
     compile_host(Facts, workstation, _).
+
+
+test(agent_ensure_package_is_idempotent) :-
+    base_facts(Facts0),
+    apply_action(Facts0, workstation, ensure_package(emacs), Facts1),
+    apply_action(Facts1, workstation, ensure_package(emacs), Facts2),
+    findall(emacs, member(package(workstation, emacs), Facts2), Matches),
+    Matches = [emacs].
+
+test(agent_replaces_feature_state) :-
+    base_facts(Facts0),
+    apply_action(Facts0, workstation,
+                 set_feature(prolog, disabled), Facts),
+    memberchk(feature(workstation, prolog, disabled), Facts),
+    \+ memberchk(feature(workstation, prolog, enabled), Facts).
+
+test(agent_secret_value_still_fails_closed,
+     [throws(error(permission_error(store, secret_value, _), _))]) :-
+    base_facts(Facts0),
+    apply_action(Facts0, workstation,
+                 set_session_variable("API_TOKEN", "plaintext"), _).
+
+test(nix_diagnostic_normalizes) :-
+    normalize_diagnostic(nix,
+                         "error: undefined variable 'swiProlog'",
+                         diagnostic(nix, undefined_attribute, "swiProlog")).
+
+test(guix_diagnostic_normalizes) :-
+    normalize_diagnostic(guix,
+                         "guix package: error: unknown package: swipl",
+                         diagnostic(guix, unknown_package, "swipl")).
+
+test(repair_expert_rewrites_known_nix_alias) :-
+    base_facts(Facts0),
+    repair_facts(Facts0, workstation,
+                 diagnostic(nix, undefined_attribute, "swiProlog"),
+                 Facts, Repair),
+    Repair = backend_package(nix, swi_prolog, "swi-prolog"),
+    memberchk(backend_package(nix, swi_prolog, "swi-prolog"), Facts),
+    compile_host(Facts, workstation,
+                 distro_ir(_, nix, Packages, _, _, _, _, _)),
+    memberchk(package(swi_prolog, "swi-prolog"), Packages).
+
+test(unknown_diagnostic_has_no_automatic_repair,
+     [throws(error(existence_error(safe_repair, _), _))]) :-
+    base_facts(Facts),
+    normalize_diagnostic(nix, "some new failure",
+                         Diagnostic),
+    repair_facts(Facts, workstation, Diagnostic, _, _).
 
 :- end_tests(symac_distro).

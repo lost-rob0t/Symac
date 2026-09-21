@@ -120,3 +120,60 @@ The intended execution loop is:
 
 LLMs may propose facts later, but no LLM is required for compilation, backend
 selection, rendering, validation, or deterministic repair.
+
+
+* Fact-writing agents
+
+The CLI exposes bounded fact mutations.  It never gives an agent a raw
+"write Nix" escape hatch.
+
+#+begin_src sh
+symac-distro agent facts.pl workstation ensure-package emacs next.pl
+symac-distro agent next.pl workstation enable-feature prolog next2.pl
+symac-distro agent next2.pl workstation enable-service openssh next3.pl
+symac-distro agent next3.pl workstation backend guix guix.pl
+#+end_src
+
+Agent updates are canonicalized, revalidated, and written to a new output file.
+Repeated =ensure-package= actions are idempotent and state-setting actions
+replace the previous fact for that host/key.
+
+For environment-backed secrets:
+
+#+begin_src sh
+symac-distro agent facts.pl workstation secret-env \
+  OPENROUTER_API_KEY OPENROUTER_API_KEY next.pl
+#+end_src
+
+This writes only =secret_source/3=.  Attempting to put a token/password/secret
+value in =session_variable/3= is rejected by the same schema gate used for
+hand-written facts.
+
+* Deterministic diagnostic repair
+
+Backend stderr can be normalized into symbolic diagnostics:
+
+#+begin_example
+error: undefined variable 'swiProlog'
+-> diagnostic(nix, undefined_attribute, "swiProlog")
+#+end_example
+
+The =repair= command applies only an explicit safe repair rule:
+
+#+begin_src sh
+symac-distro repair nix facts.pl workstation nix.log repaired.pl
+#+end_src
+
+A known repair may add or replace a =backend_package/3= mapping and the resulting
+fact graph is validated again before it is written.  An unclassified diagnostic,
+or any diagnostic without an explicit safe rule, fails closed instead of asking
+an LLM to invent configuration.
+
+This makes the LLM-free loop executable:
+
+#+begin_example
+agent action -> facts -> IR -> backend source -> real checker
+     ^                                      |
+     |                                      v
+safe repair <- explicit expert rule <- normalized diagnostic
+#+end_example
