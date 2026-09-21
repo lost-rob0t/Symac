@@ -17,7 +17,7 @@ jobs:
       - name: Install SBCL
         run: |
           sudo apt-get update
-          sudo apt-get install -y sbcl
+          sudo apt-get install -y sbcl swi-prolog-nox
 
       - name: Load and test Symac
         run: |
@@ -25,3 +25,13 @@ jobs:
             --eval '(require :asdf)' \
             --eval "(asdf:load-asd #p\"$PWD/symac.asd\")" \
             --eval '(asdf:test-system "symac")'
+
+      - name: Test deterministic Prolog distro compiler
+        run: |
+          swipl -q -s prolog/distro/tests.pl -g run_tests,halt
+          swipl -q -s prolog/distro/cli.pl -- \
+            render nix examples/distro/workstation.pl workstation > /tmp/symac.nix
+          swipl -q -s prolog/distro/cli.pl -- \
+            render guix examples/distro/workstation.pl workstation > /tmp/symac.scm
+          grep -q 'environment.systemPackages' /tmp/symac.nix
+          grep -q '%symac-packages' /tmp/symac.scm
