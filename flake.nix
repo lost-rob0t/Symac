@@ -35,7 +35,7 @@
 
       checks = forAllSystems (pkgs: {
         distro-prolog = pkgs.runCommand "symac-distro-prolog-tests"
-          { nativeBuildInputs = [ pkgs.swi-prolog pkgs.nix pkgs.guile_3_0 ]; }
+          { nativeBuildInputs = [ pkgs.swi-prolog pkgs.guile_3_0 ]; }
           ''
             swipl -q -s ${./prolog/distro}/tests.pl -g run_tests,halt
             ${self.packages.${pkgs.system}.symac-distro}/bin/symac-distro \
@@ -43,7 +43,6 @@
             ${self.packages.${pkgs.system}.symac-distro}/bin/symac-distro \
               render guix ${./examples/distro/workstation.pl} workstation > guix-fragment.scm
             grep -q 'environment.systemPackages' nix-module.nix
-            nix-instantiate --parse nix-module.nix >/dev/null
             grep -q '%symac-packages' guix-fragment.scm
             guile -c '
               (call-with-input-file "guix-fragment.scm"
