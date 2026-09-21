@@ -93,3 +93,21 @@ editor workflows.
 
 See [[file:docs/tasks-slices.org][docs/tasks-slices.org]] and
 [[file:docs/coding-agents.org][docs/coding-agents.org]].
+
+
+* Agentic Nix / Guix distribution
+
+Symac has a deterministic Prolog distribution compiler.  Agents write
+backend-neutral facts; experts validate and derive a portable desired-state IR;
+renderers emit NixOS or Guix definitions without requiring an LLM.
+
+The compiler fails closed on unknown facts, conflicting state, unmapped packages,
+and secret values.  Secret metadata may reference only environment variables,
+wallet entries, or Emacs auth-source identifiers.
+
+#+begin_src sh
+nix run .#symac-distro -- render nix examples/distro/workstation.pl workstation
+nix run .#symac-distro -- render guix examples/distro/workstation.pl workstation
+#+end_src
+
+See [[file:docs/distro.org][docs/distro.org]].
