@@ -36,6 +36,20 @@ jobs:
           grep -q 'environment.systemPackages' /tmp/symac.nix
           grep -q '%symac-packages' /tmp/symac.scm
 
+          swipl -q -s prolog/distro/cli.pl -- \
+            agent examples/distro/workstation.pl workstation \
+            ensure-package emacs /tmp/agent-facts.pl
+          grep -q 'package(workstation,emacs)' /tmp/agent-facts.pl
+          swipl -q -s prolog/distro/cli.pl -- \
+            render nix /tmp/agent-facts.pl workstation > /tmp/agent-symac.nix
+          grep -q '"emacs"' /tmp/agent-symac.nix
+
+          printf "error: undefined variable 'swiProlog'\n" > /tmp/nix-diagnostic.log
+          swipl -q -s prolog/distro/cli.pl -- \
+            repair nix examples/distro/workstation.pl workstation \
+            /tmp/nix-diagnostic.log /tmp/repaired-facts.pl
+          grep -q 'backend_package(nix,swi_prolog,"swi-prolog")' /tmp/repaired-facts.pl
+
       - name: Install Nix
         uses: cachix/install-nix-action@v31
 
