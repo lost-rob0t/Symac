@@ -5,6 +5,7 @@
     ]).
 
 :- use_module(library(lists)).
+:- use_module(library(apply)).
 :- use_module(schema).
 
 compile_host(Facts, Host, IR) :-
