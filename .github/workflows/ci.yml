@@ -39,5 +39,8 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
 
+      - name: Parse generated Nix
+        run: nix-instantiate --parse /tmp/symac.nix >/dev/null
+
       - name: Check Symac flake
         run: nix flake check --no-write-lock-file
