@@ -66,11 +66,11 @@ test(nix_render_is_deterministic_and_secret_safe) :-
     base_facts(Facts),
     compile_host(Facts, workstation, IR),
     render_ir(IR, Text),
-    sub_string(Text, _, _, _, "environment.systemPackages"),
-    sub_string(Text, _, _, _, "\"swi-prolog\""),
-    sub_string(Text, _, _, _, "services.openssh.enable = true;"),
-    sub_string(Text, _, _, _, "\"STAR_PROFILE\" = \"developer\";"),
-    sub_string(Text, _, _, _, "OPENROUTER_API_KEY <- environment"),
+    once(sub_string(Text, _, _, _, "environment.systemPackages")),
+    once(sub_string(Text, _, _, _, "\"swi-prolog\"")),
+    once(sub_string(Text, _, _, _, "services.openssh.enable = true;")),
+    once(sub_string(Text, _, _, _, "\"STAR_PROFILE\" = \"developer\";")),
+    once(sub_string(Text, _, _, _, "OPENROUTER_API_KEY <- environment")),
     \+ sub_string(Text, _, _, _, "plaintext").
 
 test(guix_render_uses_same_semantic_facts) :-
@@ -78,10 +78,10 @@ test(guix_render_uses_same_semantic_facts) :-
     override_backend(Facts0, workstation, guix, Facts),
     compile_host(Facts, workstation, IR),
     render_ir(IR, Text),
-    sub_string(Text, _, _, _, "(specification->package"),
-    sub_string(Text, _, _, _, "\"swi-prolog\""),
-    sub_string(Text, _, _, _, "(service openssh-service-type)"),
-    sub_string(Text, _, _, _, "%symac-environment").
+    once(sub_string(Text, _, _, _, "specification->package")),
+    once(sub_string(Text, _, _, _, "\"swi-prolog\"")),
+    once(sub_string(Text, _, _, _, "(service openssh-service-type)")),
+    once(sub_string(Text, _, _, _, "%symac-environment")).
 
 test(custom_backend_package_is_fact_driven) :-
     base_facts(Facts0),
