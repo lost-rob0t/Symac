@@ -115,7 +115,7 @@ collapse_values(Kind, Pairs, Collapsed) :-
     sort(Keys0, Keys),
     maplist(collapse_key(Kind, Pairs), Keys, Collapsed).
 
-collapse_key(Kind, Pairs, Key-Value) :-
+collapse_key(Kind, Pairs, Key, Key-Value) :-
     findall(V, member(Key-V, Pairs), Values0),
     sort(Values0, Values),
     ( Values = [Value] ->
