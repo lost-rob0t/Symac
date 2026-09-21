@@ -21,7 +21,7 @@ base_facts([
 
 test(data_only_reader_rejects_rules,
      [throws(error(domain_error(symac_distro_fact, _), _))]) :-
-    open_string("host(x).\nfoo(X) :- bar(X).\n", Stream),
+    open_string("host(x).\nfoo :- bar.\n", Stream),
     call_cleanup(read_fact_stream(Stream, Facts), close(Stream)),
     validate_facts(Facts).
 
@@ -58,7 +58,7 @@ test(features_and_roles_derive_packages) :-
                  distro_ir(_, _, Packages, _, _, _, _, _)),
     memberchk(package(git, "git"), Packages),
     memberchk(package(fd, "fd"), Packages),
-    memberchk(package(swi_prolog, "swiProlog"), Packages),
+    memberchk(package(swi_prolog, "swi-prolog"), Packages),
     memberchk(package(sbcl, "sbcl"), Packages),
     memberchk(package(ripgrep, "ripgrep"), Packages).
 
@@ -67,7 +67,7 @@ test(nix_render_is_deterministic_and_secret_safe) :-
     compile_host(Facts, workstation, IR),
     render_ir(IR, Text),
     sub_string(Text, _, _, _, "environment.systemPackages"),
-    sub_string(Text, _, _, _, "\"swiProlog\""),
+    sub_string(Text, _, _, _, "\"swi-prolog\""),
     sub_string(Text, _, _, _, "services.openssh.enable = true;"),
     sub_string(Text, _, _, _, "\"STAR_PROFILE\" = \"developer\";"),
     sub_string(Text, _, _, _, "OPENROUTER_API_KEY <- environment"),
