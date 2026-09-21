@@ -14,7 +14,7 @@
         let
           symac-distro = pkgs.writeShellApplication {
             name = "symac-distro";
-            runtimeInputs = [ pkgs.swiProlog ];
+            runtimeInputs = [ pkgs.swi-prolog ];
             text = ''
               exec swipl -q -s ${./prolog/distro}/cli.pl -- "$@"
             '';
@@ -35,7 +35,7 @@
 
       checks = forAllSystems (pkgs: {
         distro-prolog = pkgs.runCommand "symac-distro-prolog-tests"
-          { nativeBuildInputs = [ pkgs.swiProlog pkgs.nix pkgs.guile_3_0 ]; }
+          { nativeBuildInputs = [ pkgs.swi-prolog pkgs.nix pkgs.guile_3_0 ]; }
           ''
             swipl -q -s ${./prolog/distro}/tests.pl -g run_tests,halt
             ${self.packages.${pkgs.system}.symac-distro}/bin/symac-distro \
@@ -57,6 +57,6 @@
           '';
       });
 
-      formatter = forAllSystems (pkgs: pkgs.nixfmt-rfc-style);
+      formatter = forAllSystems (pkgs: pkgs.nixfmt);
     };
 }
