@@ -132,7 +132,7 @@ resolve_package(Facts, Backend, Logical, package(Logical, Name)) :-
     ).
 
 builtin_package(nix, git, "git").
-builtin_package(nix, swi_prolog, "swiProlog").
+builtin_package(nix, swi_prolog, "swi-prolog").
 builtin_package(nix, sbcl, "sbcl").
 builtin_package(nix, ripgrep, "ripgrep").
 builtin_package(nix, fd, "fd").
